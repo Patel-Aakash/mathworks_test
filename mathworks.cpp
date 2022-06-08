@@ -5,71 +5,118 @@
 using namespace std;
 
 // Class-1 -- Numbers
-class Numbers{
+class Number{
     public:
-
-    template <class T >
-    T display(T x,T y){
-        cout << "First number  : " << x << endl;
-        cout << "Second number : " << y << endl;
-    }    
-
-    template <class T >
-    T add(T x,T y){
-        cout << "Sumed Number  : " << x+y << endl; 
+	double val;
+	
+	Number():val(0){}
+	Number(const double &_val):val(_val){
+		//pass
+	}
+	
+	virtual void display(){
+        std::cout<<val<<std::endl;
     }
+	Number operator =(const Number &rhs){
+		this->val = rhs.val;
+		return *this;
+	}
+	virtual bool operator ==(const Number &rhs) const{
+		if(this->val==rhs.val){
+			return true;
+		}else{
+			return false;
+		}
+	}
 
-    template <class T >
-    T are_same (T x,T y){
-        printf("Are value same: %s\n",(x == y)?"true":"false");
-        cout << "--------------------------------------" << endl;
-    }
-
+	protected:
+	friend Number operator+(const Number& a, const Number& b);
 };
+Number operator+(const Number& a, const Number& b){
+	return Number(a.val+b.val);
+}
 
-// Class-2 -- Integers
-class Integers : public Numbers{
-};
-
-
-// Class-3 -- Fractions
-class Fractions {
+// Class-2 -- Numbers
+class Integer : public Number{
     public:
-    void display(int n_1, int d_1, int n_2, int d_2){
-        cout << "First number  : " << n_1 << "/" << d_1 << endl;
-        cout << "Second number : " << n_2 << "/" << d_2 << endl;
-    }    
-    
-    void add (int n_1, int d_1, int n_2, int d_2){
-        
-        //find LCM 
-        int lcm = d_1*d_2 / findHCF(d_1,d_2);
-
-        int sum = ((lcm*n_1)/d_1) + ((lcm*n_2)/d_2);
-
-        cout << "Sumed number  : " << sum << "/" << lcm << endl; 
+	int val;
+	
+	Integer():val(0){}
+	Integer(const int &_val):val(_val){
+		//pass
+	}
+    void display(){
+        std::cout<<val<<std::endl;
     }
-
-    void are_same (int n_1, int d_1, int n_2, int d_2){
-        int y = n_1*d_2 - n_2*d_1; 
-        printf("Are value same: %s\n",(y==0)?"true":"false");
-        cout << "--------------------------------------" << endl;
-    } 
-
-    private:
-    //HCF function - highest common factor
-    int findHCF(int n1, int n2){
-        int hcf;
-        for (int i=1; i<= n1 && i<=n2; i++)
-        {
-            if (n1%i ==0 && n2%i ==0)
-            hcf = i;                
-        }
-        return hcf;
-    }
+	Integer operator =(const Integer &rhs){
+		this->val = rhs.val;
+		return *this;
+	}
+	bool operator ==(const Integer &rhs) const{
+		if(this->val==rhs.val){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	protected:
+	friend Integer operator+(const Integer& a, const Integer& b);
 };
+Integer operator+(const Integer& a, const Integer& b){
+	return Integer(a.val+b.val);
+}
+
+// Class-3 -- Numbers
+class Fraction : public Number{
+    public:
+	int num,den;
+	
+	Fraction():num(1),den(1){}
+	Fraction(int _num,int _den):num(_num),den(_den){
+		if(den==0){
+			throw std::logic_error("Denominator of Fraction cannot be zero");
+		}
+	}
+    void display(){
+        std::cout<<num<<"/"<<den<<std::endl;
+    }
+	Fraction &operator =(const Fraction &rhs){
+		this->num = rhs.num;
+		this->den = rhs.den;
+		return *this;
+	}
+	bool operator ==(const Fraction &rhs) const{
+		if(this->num/this->den==rhs.num/rhs.den){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	bool operator ==(const Integer &rhs) const{
+		if(this->num/this->den==rhs.val){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	protected:
+	friend class Integer;
+	friend Fraction operator+(const Fraction& a, const Fraction& b);
+	friend Fraction operator+(const Fraction& a, const Integer& b);
+	friend Fraction operator+(const Integer& a, const Fraction& b);
+};
+Fraction operator+(const Fraction& a, const Fraction& b){
+	return Fraction(a.num*b.den+b.num*a.den,a.den*b.den);
+}
+Fraction operator+(const Fraction& a, const Integer& b){
+	return Fraction(a.num+b.val*a.den,a.den);
+}
+Fraction operator+(const Integer& a, const Fraction& b){
+	return Fraction(b.num+a.val*b.den,b.den);
+}
 
 
+//Input reading
 tuple<double, double> read_input(){
     double x;
     double y;
@@ -104,19 +151,42 @@ tuple<int,int,int,int> read_input_1(){
     return  std::make_tuple(x , y, a, b);
 }  
 
+tuple<int,int,int> read_input_2(){
+    int x,y;
+    double a;
+    cout << "Enter Fraction numbers numerator    - " ;
+    cin >> x ;
+    cout << "Enter Fraction numbers denominator  - " ;
+    cin >> y ;
+    cout << "Enter Non-Fraction Number           - " ;
+    cin >> a ;
+    cout << "--------------------------------------" << endl;
+    try {
+        if ( floor(a)!=a || y==0) {
+            throw 0;
+        }
+    }
+    catch(int x){
+        cout << "ERROR::Unsupported Input argument-Input must be non-zero integer" << endl;
+        exit(0);
+    }
+    return  std::make_tuple(x , y, a);
+}  
+
 int select_input_type(){
     int input_type;
     cout << "--------------------------------------" << endl;
-    cout << "Select Input type:    " << endl;
-    cout << " 1 : Number           " << endl;
-    cout << " 2 : Fraction         " << endl;
+    cout << "Select Input type:     " << endl;
+    cout << " 1 : Number-Number     " << endl;
+    cout << " 2 : Fraction-Fraction " << endl;
+    cout << " 3 : Mix               " << endl;
     cout << "--------------------------------------" << endl;
 
     try {
         cout << "Please Enter Value:   " ;
         cin >> input_type ;   
         cout << "--------------------------------------" << endl;
-        if (input_type != 1 && input_type != 2 ){
+        if (input_type != 1 && input_type != 2 && input_type != 3){
             throw 99;
         }     
     }
@@ -124,15 +194,10 @@ int select_input_type(){
         cout << "ERROR::Unsupported Input argument" << endl;
         exit(0);
     }
-    //cout << "Please Enter Value:   " ;
-    //cin >> input_type ;
     return input_type;
 }
 
 int main(){
-    Numbers N_Object;  // Object for class-1
-    Integers N_int;    // Object for class-2 
-    Fractions N_fra;   // Object for class-3
     double x, y;
     int num_1, den_1, num_2, den_2;
     int ip_type;
@@ -142,22 +207,59 @@ int main(){
         tie(x, y) = read_input();
      
         if (floor(x) == x && floor(y) == y){
-            N_int.display(x, y);               // Integer Object and  Integer class will be used here 
-            N_int.add(x, y);                   // Integer Object and  Integer class will be used here  
-            N_int.are_same(x, y);              // Integer Object and  Integer class will be used here 
+            Integer a(x);
+            Integer b(y);
+            Integer c;
+            c = a+b;
+            a==b;
+            cout << "First number  : " << a.val << endl;
+            cout << "Second number : " << b.val << endl;
+            cout << "Sumed Number  : " << c.val << endl; 
+            cout << std::boolalpha << "Are value same: " << (a==b) << endl; 
+            cout << "--------------------------------------" << endl;
         }
         else {
-            N_Object.display(x, y);           // Number Object and Number class will be used here 
-            N_Object.add(x, y);               // Number Object and Number class will be used here
-            N_Object.are_same(x, y);          // Number Object and Number class will be used here
+            Number a(x);
+            Number b(y);
+            Number c;
+            c = a+b;
+            a==b;
+            cout << "First number  : " << a.val << endl;
+            cout << "Second number : " << b.val << endl;
+            cout << "Sumed Number  : " << c.val << endl; 
+            cout << std::boolalpha << "Are value same: " << (a==b) << endl; 
+            cout << "--------------------------------------" << endl;
         }
     }
     else if (ip_type == 2){
         tie(num_1, den_1, num_2, den_2) = read_input_1();
+        Fraction d(num_1,den_1);
+        Fraction e(num_2,den_2);
+        Fraction f;
+
+        f=d+e;
+
+
+    
+        cout << "First number  : " << d.num << "/" << d.den << endl ;
+        cout << "Second number : " << e.num << "/" << e.den << endl;
+        cout << "Sumed Number  : " << f.num << "/" << f.den << endl; 
+        cout << std::boolalpha << "Are value same: " << (d==e) << endl; 
+        cout << "--------------------------------------" << endl;
+    } 
+    else if (ip_type == 3){
+        tie(num_1, den_1, x) = read_input_2();
+        Fraction d(num_1,den_1);
+        Integer  e(x);
+        Fraction f;
         
-        N_fra.display(num_1,den_1,num_2,den_2);    // Fraction Object and Fraction class will be used here
-        N_fra.add (num_1,den_1,num_2,den_2);       // Fraction Object and Fraction class will be used here
-        N_fra.are_same (num_1,den_1,num_2,den_2);  // Fraction Object and Fraction class will be used here 
+        f=d+e;
+
+        cout << "First number  : " << d.num << "/" << d.den << endl;
+        cout << "Second number : " << e.val << endl;
+        cout << "Sumed Number  : " << f.num << "/" << f.den << endl; 
+        cout << std::boolalpha << "Are value same: " << (d==e) << endl; 
+        cout << "--------------------------------------" << endl;
     } 
     
    return 0;
